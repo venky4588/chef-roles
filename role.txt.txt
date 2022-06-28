@@ -1,0 +1,73 @@
+chef-roles
+---------
+knife role create tomcat-role
+--------
+in files folder tomcat-users.xml and context.xml
+--------------------------
+in recipe folder vi tomcat9.rb
+
+#installing java
+package 'java-1.8.0-openjdk-devel' do
+  action :install
+end
+#downloading tomcat tar file
+remote_file '/usr/local/apache-tomcat-9.0.37.tar.gz' do
+  source 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.37/bin/apache-tomcat-9.0.37.tar.gz'
+  action :create
+end
+--------
+vi tomcat9t.rb
+---------
+execute "extarct tar" do
+  command "tar -xvf /usr/local/apache-tomcat-9.0.37.tar.gz -C /usr/local"
+end
+#rename to tomcat 9
+execute "rename" do
+  command "mv /usr/local/apache-tomcat-9.0.37 /usr/local/tomcat9"
+end
+#exporting the path
+execute "path setting" do
+  command 'echo "export CATALINA_HOME="/usr/local/tomcat9"" >> ~/.bashrc'
+  action :run
+end
+#sourcing bash rc
+execute "path setting" do
+  command "source ~/.bashrc"
+end
+----------
+vi tomcat9s.rb
+---------
+#copy tomcat user.xml
+cookbook_file "usr/local/tomcat9/conf/tomcat-users.xml" do
+  source "tomcat-users.xml"
+  action :create
+end
+#copy context.xml
+cookbook_file "/usr/local/tomcat9/webapps/manager/META-INF/context.xml" do
+  source "context.xml"
+  action :create
+end
+#shutdown tomcat service
+execute "shutdown.sh" do
+  command "sh /usr/local/tomcat9/bin/shutdown.sh"
+end
+#start tomcat service
+execute "startup.sh" do
+  command "sh /usr/local/tomcat9/bin/startup.sh"
+end
+---------------
+knife role create tomcat-role
+knife role edit tomcat-role
+--------------------
+
+"recipe[ws1::tomcat9]",
+"recipe[ws1::tomcat9t]",
+"recipe[ws1::tomcat9t]"
+
+
+
+"dev_env": [
+"recipe[ws1::tomcat9]",
+"recipe[ws1::tomcat9s]",
+"recipe[ws1::tomcat9t]"
+]
